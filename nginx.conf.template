@@ -1,0 +1,47 @@
+worker_processes auto;
+error_log /dev/stderr warn;
+pid /run/nginx/nginx.pid;
+events { worker_connections 1024; }
+http {
+  access_log off;
+  # Ghost sets no default MIME include we need; keep it minimal.
+  server_tokens off;
+  client_max_body_size 100m;
+  proxy_http_version 1.1;
+
+  server {
+    listen ${PORT} default_server;
+    server_name _;
+
+    # Ghost front-end + admin on loopback. Railway's edge already sets
+    # X-Forwarded-Proto: https on real traffic; we set it explicitly so Ghost
+    # never 301-loops behind the proxy.
+    location / {
+      proxy_pass http://127.0.0.1:2368;
+      proxy_set_header Host              $host;
+      proxy_set_header X-Real-IP         $remote_addr;
+      proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto https;
+    }
+
+    # mailpit UI (staff invites / password resets / member magic links land
+    # here when no external SMTP is configured), behind basic auth.
+    location = /inbox { return 301 /inbox/; }
+    location /inbox/ {
+      auth_basic           "Ghost mail inbox";
+      auth_basic_user_file /var/lib/ghost/railway/inbox.htpasswd;
+      proxy_pass http://127.0.0.1:8025/;
+      proxy_set_header Host            $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Readiness: proxy to Ghost's unauthenticated site endpoint with the https
+    # forwarded-proto header so it answers 200 instead of a scheme redirect.
+    location = /healthz {
+      access_log off;
+      proxy_pass http://127.0.0.1:2368/ghost/api/admin/site/;
+      proxy_set_header Host              $host;
+      proxy_set_header X-Forwarded-Proto https;
+    }
+  }
+}
