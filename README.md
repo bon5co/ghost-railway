@@ -1,5 +1,9 @@
 # ghost-railway
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/ghost-or-just-updated-substack-alternati?referralCode=Z1xivh&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
+**Deploy on Railway:** [Ghost template](https://railway.com/deploy/ghost-or-just-updated-substack-alternati?referralCode=Z1xivh&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
 A Railway wrapper image for [Ghost](https://ghost.org) 6.60.0, the open-source
 publishing platform (a self-hosted Substack / Medium alternative). It packages
 the official `ghost:6.60.0-alpine` image so a Railway deploy comes up **already
